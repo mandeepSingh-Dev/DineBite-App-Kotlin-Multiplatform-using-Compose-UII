@@ -21,209 +21,232 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import com.example.kmpapp.core.base.UIEvent
 import com.example.kmpapp.dinebite.navigation.DineBiteScreens
+import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.viewmodel.koinViewModel
 import kmpapp.shared.generated.resources.Res
 import kmpapp.shared.generated.resources.login_image
 import kmpapp.shared.generated.resources.kaho_ji_logoimage1
 
 @Composable
 fun DineBiteLoginScreen(backStack: NavBackStack<NavKey>) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var rememberMe by remember { mutableStateOf(false) }
+    val viewModel: LoginViewModel = koinViewModel()
+    val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(Color(0xFFFF9E40), Color(0xFFFF6B00))
-                )
-            )
-    ) {
-        Image(
-            painter = painterResource(Res.drawable.login_image),
-            contentDescription = "Login Background",
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(280.dp)
-                .align(Alignment.BottomCenter),
-            contentScale = ContentScale.Crop,
-            alpha = 0.45f
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(30.dp))
-
-            Image(
-                painter = painterResource(Res.drawable.kaho_ji_logoimage1),
-                contentDescription = "DineBite Logo",
-                modifier = Modifier.size(70.dp)
-            )
-            Text(
-                text = "DineBite",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-            Text(
-                text = "Restaurant",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.White
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Text(
-                text = "Welcome Back!",
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-            Text(
-                text = "Login to continue",
-                fontSize = 13.sp,
-                color = Color.DarkGray
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                placeholder = { Text("✉️  Email Address", color = Color.Gray, fontSize = 14.sp) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    disabledContainerColor = Color.White,
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent
-                ),
-                singleLine = true
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                placeholder = { Text("🔒  Password", color = Color.Gray, fontSize = 14.sp) },
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    disabledContainerColor = Color.White,
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent
-                ),
-                singleLine = true,
-                trailingIcon = {
-                    TextButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Text(if (passwordVisible) "👁️" else "🙈", fontSize = 14.sp)
-                    }
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is UIEvent.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(event.message)
                 }
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(
-                        checked = rememberMe,
-                        onCheckedChange = { rememberMe = it },
-                        colors = CheckboxDefaults.colors(checkedColor = Color(0xFFFF6B00))
-                    )
-                    Text("Remember Me", fontSize = 12.sp, color = Color.DarkGray)
-                }
-                TextButton(onClick = {}) {
-                    Text("Forgot Password?", fontSize = 12.sp, color = Color(0xFFFF3D00), fontWeight = FontWeight.Bold)
+                is UIEvent.Navigate -> {
+                    backStack.clear()
+                    backStack.add(event.route as DineBiteScreens)
                 }
             }
+        }
+    }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = {
-                    DineBiteRepository.isLoggedIn = true
-                    backStack.clear()
-                    backStack.add(DineBiteScreens.Home)
-                },
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color(0xFFFF9E40), Color(0xFFFF6B00))
+                    )
+                )
+        ) {
+            Image(
+                painter = painterResource(Res.drawable.login_image),
+                contentDescription = "Login Background",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5722))
+                    .height(280.dp)
+                    .align(Alignment.BottomCenter),
+                contentScale = ContentScale.Crop,
+                alpha = 0.45f
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Spacer(modifier = Modifier.height(30.dp))
+
+                Image(
+                    painter = painterResource(Res.drawable.kaho_ji_logoimage1),
+                    contentDescription = "DineBite Logo",
+                    modifier = Modifier.size(70.dp)
+                )
                 Text(
-                    text = "Login →",
-                    fontSize = 16.sp,
+                    text = "DineBite",
+                    fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                HorizontalDivider(modifier = Modifier.weight(1f).padding(end = 8.dp), color = Color.White.copy(alpha = 0.6f))
-                Text("or continue with", color = Color.DarkGray, fontSize = 12.sp)
-                HorizontalDivider(modifier = Modifier.weight(1f).padding(start = 8.dp), color = Color.White.copy(alpha = 0.6f))
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
-                Box(modifier = Modifier.size(50.dp).clip(CircleShape).background(Color.White), contentAlignment = Alignment.Center) {
-                    Text("", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                }
-                Box(modifier = Modifier.size(50.dp).clip(CircleShape).background(Color.White), contentAlignment = Alignment.Center) {
-                    Text("🌐", fontSize = 18.sp)
-                }
-                Box(modifier = Modifier.size(50.dp).clip(CircleShape).background(Color.White), contentAlignment = Alignment.Center) {
-                    Text("👥", fontSize = 18.sp)
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Row(
-                modifier = Modifier.padding(bottom = 20.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Don't have an account? ", color = Color.DarkGray, fontSize = 13.sp)
                 Text(
-                    "Sign Up",
-                    color = Color(0xFFFF3D00),
+                    text = "Restaurant",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Text(
+                    text = "Welcome Back!",
+                    fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+                Text(
+                    text = "Login to continue",
                     fontSize = 13.sp,
-                    modifier = Modifier.clickable {
-                        backStack.removeLastOrNull()
-                        backStack.add(DineBiteScreens.Signup)
+                    color = Color.DarkGray
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                OutlinedTextField(
+                    value = uiState?.email ?: "",
+                    onValueChange = { viewModel.onEmailChanged(it) },
+                    placeholder = { Text("✉️  Email Address", color = Color.Gray, fontSize = 14.sp) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        disabledContainerColor = Color.White,
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent
+                    ),
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                OutlinedTextField(
+                    value = uiState?.password ?: "",
+                    onValueChange = { viewModel.onPasswordChanged(it) },
+                    placeholder = { Text("🔒  Password", color = Color.Gray, fontSize = 14.sp) },
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        disabledContainerColor = Color.White,
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent
+                    ),
+                    singleLine = true,
+                    trailingIcon = {
+                        TextButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Text(if (passwordVisible) "👁️" else "🙈", fontSize = 14.sp)
+                        }
                     }
                 )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = uiState?.rememberMe ?: false,
+                            onCheckedChange = { viewModel.onRememberMeChanged(it) },
+                            colors = CheckboxDefaults.colors(checkedColor = Color(0xFFFF6B00))
+                        )
+                        Text("Remember Me", fontSize = 12.sp, color = Color.DarkGray)
+                    }
+                    TextButton(onClick = {}) {
+                        Text("Forgot Password?", fontSize = 12.sp, color = Color(0xFFFF3D00), fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = { viewModel.login() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5722))
+                ) {
+                    if (uiState?.isLoading == true) {
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                    } else {
+                        Text(
+                            text = "Login →",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    HorizontalDivider(modifier = Modifier.weight(1f).padding(end = 8.dp), color = Color.White.copy(alpha = 0.6f))
+                    Text("or continue with", color = Color.DarkGray, fontSize = 12.sp)
+                    HorizontalDivider(modifier = Modifier.weight(1f).padding(start = 8.dp), color = Color.White.copy(alpha = 0.6f))
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    Box(modifier = Modifier.size(50.dp).clip(CircleShape).background(Color.White), contentAlignment = Alignment.Center) {
+                        Text("", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Box(modifier = Modifier.size(50.dp).clip(CircleShape).background(Color.White), contentAlignment = Alignment.Center) {
+                        Text("🌐", fontSize = 18.sp)
+                    }
+                    Box(modifier = Modifier.size(50.dp).clip(CircleShape).background(Color.White), contentAlignment = Alignment.Center) {
+                        Text("👥", fontSize = 18.sp)
+                    }
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Row(
+                    modifier = Modifier.padding(bottom = 20.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Don't have an account? ", color = Color.DarkGray, fontSize = 13.sp)
+                    Text(
+                        "Sign Up",
+                        color = Color(0xFFFF3D00),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        modifier = Modifier.clickable {
+                            backStack.removeLastOrNull()
+                            backStack.add(DineBiteScreens.Signup)
+                        }
+                    )
+                }
             }
         }
     }

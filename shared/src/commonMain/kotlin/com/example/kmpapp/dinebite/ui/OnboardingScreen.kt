@@ -21,10 +21,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
+import com.example.kmpapp.core.datastore.AppDatastore
 import com.example.kmpapp.dinebite.navigation.DineBiteScreens
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.koinInject
 import kmpapp.shared.generated.resources.Res
 import kmpapp.shared.generated.resources.onboarding_1
 import kmpapp.shared.generated.resources.onboarding_2
@@ -39,6 +41,7 @@ data class OnboardingStepItem(
 
 @Composable
 fun DineBiteOnboardingScreen(backStack: NavBackStack<NavKey>) {
+    val appDatastore: AppDatastore = koinInject()
     val items = listOf(
         OnboardingStepItem(
             titleTop = "Discover",
@@ -81,8 +84,11 @@ fun DineBiteOnboardingScreen(backStack: NavBackStack<NavKey>) {
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(onClick = {
-                    backStack.removeLastOrNull()
-                    backStack.add(DineBiteScreens.Login)
+                    coroutineScope.launch {
+                        appDatastore.saveOnboardingCompleted(true)
+                        backStack.removeLastOrNull()
+                        backStack.add(DineBiteScreens.Login)
+                    }
                 }) {
                     Text("Skip", color = Color.Gray, fontSize = 15.sp, fontWeight = FontWeight.Medium)
                 }
@@ -186,8 +192,11 @@ fun DineBiteOnboardingScreen(backStack: NavBackStack<NavKey>) {
                 } else {
                     Button(
                         onClick = {
-                            backStack.removeLastOrNull()
-                            backStack.add(DineBiteScreens.Login)
+                            coroutineScope.launch {
+                                appDatastore.saveOnboardingCompleted(true)
+                                backStack.removeLastOrNull()
+                                backStack.add(DineBiteScreens.Login)
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth()

@@ -2,24 +2,27 @@ package com.example.kmpapp.core.network
 
 import com.example.kmpapp.core.network.models.ApiResponse2
 import com.example.kmpapp.core.network.models.ErrorResponse
+import com.example.kmpapp.core.utils.fromJson
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.plugins.ResponseException
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.isSuccess
 import kotlinx.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.retryWhen
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
-import kotlin.time.Duration.Companion.milliseconds
 
 fun isNetworkException(e: Throwable): Boolean =
     e is IOException ||
@@ -46,17 +49,21 @@ fun handleUseCaseException(e: Throwable): String {
         is ResponseException -> {
             networkCodeError(e.response.status.value)
         }
+
         is HttpRequestTimeoutException,
         is SocketTimeoutException,
         is ConnectTimeoutException -> {
             "Connection Error: Unable to establish a connection to the server."
         }
+
         is IOException -> {
             "Can’t reach the server right now. Please try again later."
         }
+
         is SerializationException -> {
             "Data parsing error. Please try again."
         }
+
         else -> {
             val msg = e.message
             if (msg?.contains("Unable to resolve host", ignoreCase = true) == true ||
@@ -78,168 +85,71 @@ class NetworkHelper(
         explicitNulls = false
     }
 ) {
+
+
     inline fun <reified T> executeWithFlow(
-        crossinline call: suspend () -> T,
-        crossinline onSuccess: suspend (response: T) -> String? = { null },
-        crossinline onError: suspend (exception: String) -> Unit = {}
+        crossinline call: suspend () -> HttpResponse,
+        crossinline onSuccess: suspend (response: HttpResponse) -> String?,
+        crossinline onError: suspend (exception: String) -> Unit
     ): Flow<NetworkResult<T>> = flow {
+
         emit(NetworkResult.Loading())
 
-        try {
-            val response = call()
-            val exception = onSuccess(response)
-            if (exception == null) {
-                emit(NetworkResult.Success(response))
-            } else {
-                onError(exception)
-                emit(NetworkResult.Error(exception))
-            }
-        } catch (e: ResponseException) {
-            val statusCode = e.response.status.value
-            val errorBodyString = try {
-                e.response.bodyAsText()
-            } catch (_: Throwable) {
-                null
-            }
+        val response = call()
 
-            val errorResponse = errorBodyString?.let { parseError(it) }
-            val errorMessage = if (!errorResponse?.message.isNullOrBlank()) {
-                errorResponse.message
-            } else {
-                networkCodeError(statusCode)
-            }
-
-            onError(errorMessage)
-            emit(NetworkResult.Error(error = errorMessage, errorCode = statusCode, bodyData = errorResponse))
-        } catch (e: Throwable) {
-            if (e is CancellationException) throw e
-            val errorMessage = handleUseCaseException(e)
-            onError(errorMessage)
-            emit(NetworkResult.Error(errorMessage))
-        }
-    }.catch { t ->
-        val errorMessage = handleUseCaseException(t)
-        onError(errorMessage)
-        emit(NetworkResult.Error(errorMessage))
-    }.flowOn(Dispatchers.Default)
-
-    inline fun <reified T> executeWithRetryFlow(
-        crossinline call: suspend () -> T,
-        crossinline onSuccess: suspend (response: T) -> String? = { null },
-        crossinline onError: suspend (exception: String) -> Unit = {},
-        shouldLoading: Boolean = true,
-        maxRetries: Int = 3
-    ): Flow<NetworkResult<T>> = flow {
-        if (shouldLoading) {
-            emit(NetworkResult.Loading())
-        }
-
-        try {
-            val response = call()
-            val exception = onSuccess(response)
-            if (exception == null) {
-                emit(NetworkResult.Success(response))
-            } else {
-                onError(exception)
-                emit(NetworkResult.Error(exception))
-            }
-        } catch (e: ResponseException) {
-            val statusCode = e.response.status.value
-            val errorBodyString = try {
-                e.response.bodyAsText()
-            } catch (_: Throwable) {
-                null
-            }
-
-            val errorResponse = errorBodyString?.let { parseError(it) }
-            val errorMessage = if (!errorResponse?.message.isNullOrBlank()) {
-                errorResponse.message
-            } else {
-                networkCodeError(statusCode)
-            }
-
-            onError(errorMessage)
-            emit(NetworkResult.Error(error = errorMessage, errorCode = statusCode, bodyData = errorResponse))
-        } catch (e: Throwable) {
-            if (e is CancellationException) throw e
-            val errorMessage = handleUseCaseException(e)
-            onError(errorMessage)
-            emit(NetworkResult.Error(errorMessage))
-        }
-    }.retryWhen { throwable, count ->
-        if (isNetworkException(throwable) && count < maxRetries) {
-            delay((1000 * (count + 1)).milliseconds)
-            true
+        // In Ktor (with expectSuccess = true), reaching this line means 2xx Success
+        val exception = onSuccess(response)
+        val result = if (exception == null) {
+            NetworkResult.Success(response.body<T>())
         } else {
-            false
-        }
-    }.catch { t ->
-        val errorMessage = handleUseCaseException(t)
-        onError(errorMessage)
-        emit(NetworkResult.Error(errorMessage))
-    }.flowOn(Dispatchers.Default)
-
-    inline fun <reified T> executeWithResponseManipulate(
-        crossinline call: suspend () -> T,
-        crossinline onSuccess: suspend (response: T) -> T = { it },
-        crossinline onError: suspend (exception: String) -> Unit = {},
-        shouldLoading: Boolean = true,
-        maxRetries: Int = 3
-    ): Flow<NetworkResult<T>> = flow {
-        if (shouldLoading) {
-            emit(NetworkResult.Loading())
+            NetworkResult.Error(exception)
         }
 
-        try {
-            val response = call()
-            val updatedResponse = onSuccess(response)
-            emit(NetworkResult.Success(updatedResponse))
-        } catch (e: ResponseException) {
-            val statusCode = e.response.status.value
-            val errorBodyString = try {
-                e.response.bodyAsText()
-            } catch (_: Throwable) {
-                null
+        emit(result)
+
+    }.catch { e ->
+
+        //handling Response exception here Because Ktor throw direct Response exception not like Retrofit which gives backend api error in response body
+        when (e) {
+            is ResponseException -> {
+                val statusCode = e.response.status.value
+                val errorBody = try {
+                    e.response.bodyAsText().fromJson<ErrorResponse>()
+                } catch (parseEx: Exception) {
+                    null
+                }
+
+                println("flbmkfmvf ->  ${errorBody.toString()}")
+                println("flbmkfmvf-> ${statusCode}")
+
+                val errorResult: NetworkResult<T> = when {
+                    statusCode == HttpStatusCode.BadRequest.value && errorBody?.status == 0 -> {
+                        NetworkResult.Error(handleUseCaseException(Exception(errorBody.message)))
+                    }
+                    statusCode == HttpStatusCode.Forbidden.value && errorBody?.status == 0 -> {
+                        NetworkResult.Error(handleUseCaseException(Exception(errorBody.message)))
+                    }
+                    statusCode == HttpStatusCode.Unauthorized.value -> {
+                        // clearAllUserData()
+                        NetworkResult.Error(
+                            error = handleUseCaseException(e),
+                            errorCode = statusCode
+                        )
+                    }
+                    else -> {
+                        NetworkResult.Error(
+                            error = handleUseCaseException(Exception(errorBody?.message)),
+                            errorCode = statusCode
+                        )
+                    }
+                }
+                emit(errorResult)
             }
 
-            val errorResponse = errorBodyString?.let { parseError(it) }
-            val errorMessage = if (!errorResponse?.message.isNullOrBlank()) {
-                errorResponse.message
-            } else {
-                networkCodeError(statusCode)
-            }
-
-            onError(errorMessage)
-            emit(NetworkResult.Error(error = errorMessage, errorCode = statusCode, bodyData = errorResponse))
-        } catch (e: Throwable) {
-            if (e is CancellationException) throw e
-            val errorMessage = handleUseCaseException(e)
-            onError(errorMessage)
-            emit(NetworkResult.Error(errorMessage))
-        }
-    }.retryWhen { throwable, count ->
-        if (isNetworkException(throwable) && count < maxRetries) {
-            delay((1000 * (count + 1)).milliseconds)
-            true
-        } else {
-            false
-        }
-    }.catch { t ->
-        val errorMessage = handleUseCaseException(t)
-        onError(errorMessage)
-        emit(NetworkResult.Error(errorMessage))
-    }.flowOn(Dispatchers.Default)
-
-    fun parseError(rawBody: String): ErrorResponse? {
-        return try {
-            json.decodeFromString<ErrorResponse>(rawBody)
-        } catch (_: Throwable) {
-            try {
-                val apiResponse = json.decodeFromString<ApiResponse2>(rawBody)
-                ErrorResponse(status = apiResponse.status, message = apiResponse.message)
-            } catch (_: Throwable) {
-                null
+            else -> {
+                // Handles all other exceptions (IOException, SerializationException, etc.)
+                emit(NetworkResult.Error(handleUseCaseException(e)))
             }
         }
-    }
+    }.flowOn(Dispatchers.IO)
 }

@@ -69,6 +69,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.core)
             implementation("io.coil-kt.coil3:coil-compose:3.1.0")
             implementation("io.coil-kt.coil3:coil-network-ktor3:3.1.0")
+            implementation("androidx.datastore:datastore-preferences:1.1.7")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

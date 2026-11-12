@@ -9,7 +9,8 @@ actual class NotificationHelper {
     actual fun showNotification(title: String, message: String) {
         val center = UNUserNotificationCenter.currentNotificationCenter()
 
-        CLLocationManager
+
+        NSUserDefaults.standardUserDefaults
 
         center.requestAuthorizationWithOptions(
             options = UNAuthorizationOptionAlert or UNAuthorizationOptionSound or UNAuthorizationOptionBadge

@@ -50,6 +50,8 @@ fun DineBiteHomeScreen(backStack: NavBackStack<NavKey>) {
     val activity = remember(context) { context.findActivity() }
     val locationService = remember { LocationService() }
 
+
+
     LaunchedEffect(Unit) {
         activity?.let { act ->
             val permissions = mutableListOf(
