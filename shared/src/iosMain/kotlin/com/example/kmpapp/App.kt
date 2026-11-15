@@ -28,7 +28,7 @@ actual fun App() {
                 snackbarHost = { SnackbarHost(snackBarHostState) },
                 modifier = Modifier.fillMaxSize()
             ) { innerPadding ->
-                Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+                Box(modifier = Modifier.fillMaxSize()) {
                     when (backstack.lastOrNull()) {
                         is DineBiteScreens.Splash -> DineBiteSplashScreen(backstack)
                         is DineBiteScreens.Welcome -> DineBiteWelcomeScreen(backstack)

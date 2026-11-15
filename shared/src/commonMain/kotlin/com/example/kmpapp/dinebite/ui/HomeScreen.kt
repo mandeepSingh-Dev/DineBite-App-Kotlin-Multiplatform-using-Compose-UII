@@ -1,11 +1,5 @@
 package com.example.kmpapp.dinebite.ui
 
-import android.Manifest
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
-import android.os.Build
-import androidx.core.app.ActivityCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,12 +26,6 @@ import coil3.compose.AsyncImage
 import com.example.kmpapp.dinebite.navigation.DineBiteScreens
 import com.example.kmpapp.dinebite.util.LocationService
 
-fun Context.findActivity(): Activity? = when (this) {
-    is Activity -> this
-    is ContextWrapper -> baseContext.findActivity()
-    else -> null
-}
-
 @Composable
 fun DineBiteHomeScreen(backStack: NavBackStack<NavKey>) {
     var selectedTab by remember { mutableStateOf("Delivery") }
@@ -46,24 +33,9 @@ fun DineBiteHomeScreen(backStack: NavBackStack<NavKey>) {
     var selectedFoodItem by remember { mutableStateOf<FoodItem?>(null) }
     var currentAddress by remember { mutableStateOf("Home (B-120, Green Park, New De...)") }
 
-    val context = LocalContext.current
-    val activity = remember(context) { context.findActivity() }
     val locationService = remember { LocationService() }
 
-
-
     LaunchedEffect(Unit) {
-        activity?.let { act ->
-            val permissions = mutableListOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                permissions.add(Manifest.permission.POST_NOTIFICATIONS)
-            }
-            ActivityCompat.requestPermissions(act, permissions.toTypedArray(), 100)
-        }
-
         locationService.requestLocationAndFetch { loc ->
             if (loc.isNotEmpty()) {
                 currentAddress = loc

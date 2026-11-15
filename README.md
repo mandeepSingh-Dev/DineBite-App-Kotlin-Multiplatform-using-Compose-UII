@@ -29,3 +29,16 @@ Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
 ---
 
 Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+
+
+**KMP THINGS:**
+Xcode build fixed by running this command :
+Learn : Why this command and its effect. chmod +x /Users/mandeepsingh/AndroidStudioProjects/DineBite-App-Kotlin-Multiplatform-using-Compose-UII/gradlew
+
+Summary Checklist for Windows KMP Development
+•
+[ ] Keep Android-specific dependencies strictly in androidMain.dependencies, never in commonMain.
+•
+[ ] Set up a GitHub Actions workflow (macos-latest) to test iOS compilation on every push.
+•
+[ ] Use expect/actual for any native device features (permissions, bluetooth, sensors, location).
