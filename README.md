@@ -35,6 +35,8 @@ Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-mu
 Xcode build fixed by running this command :
 Learn : Why this command and its effect. chmod +x /Users/mandeepsingh/AndroidStudioProjects/DineBite-App-Kotlin-Multiplatform-using-Compose-UII/gradlew
 
+Double click on iosApp.xcodeConfig -> It will open in xcode then click on run build then It will run in ios app.
+
 Summary Checklist for Windows KMP Development
 •
 [ ] Keep Android-specific dependencies strictly in androidMain.dependencies, never in commonMain.
