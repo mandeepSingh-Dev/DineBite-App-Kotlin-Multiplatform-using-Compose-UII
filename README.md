@@ -33,7 +33,21 @@ Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-mu
 
 **KMP THINGS:**
 Xcode build fixed by running this command :
-Learn : Why this command and its effect. chmod +x /Users/mandeepsingh/AndroidStudioProjects/DineBite-App-Kotlin-Multiplatform-using-Compose-UII/gradlew
+Learn : Why this command and its effect. 
+ chmod +x /Users/mandeepsingh/AndroidStudioProjects/DineBite-App-Kotlin-Multiplatform-using-Compose-UII/gradlew
+
+For solve padding error Use this commande :
+perl -pi -e 's/\r\n/\n/g' /Users/appsinvo/Downloads/KMPApp/gradlew
+
+For installing JDK (Java) in Mac-Os
+Use this links to download :
+[https://adoptium.net/temurin/releases/?os=mac&arch=aarch64&version=17]
+(https://adoptium.net/temurin/releases/?os=mac&arch=aarch64&version=17)
+
+Then to verify java use this command:
+ - java -version
+ - /usr/libexec/java_home -V
+
 
 Double click on iosApp.xcodeConfig -> It will open in xcode then click on run build then It will run in ios app.
 
