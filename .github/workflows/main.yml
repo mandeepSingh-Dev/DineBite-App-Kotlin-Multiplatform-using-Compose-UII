@@ -1,0 +1,14 @@
+
+name: KMP Android and iOS CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Verify GitHub Actions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Test workflow
+        run: echo "GitHub Actions is working!"
