@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.os.Build
+import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -14,12 +15,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.example.kmpapp.core.ui.components.NetworkStatusBanner
 import com.example.kmpapp.core.di.appModule
 import com.example.kmpapp.dinebite.navigation.DineBiteScreens
 import com.example.kmpapp.dinebite.navigation.dineBiteGraph
@@ -35,6 +38,16 @@ fun Context.findActivity(): Activity? = when (this) {
 
 @Composable
 actual fun App() {
+
+
+
+    val platformInterface = object : PlatformInterface{
+        override fun getResult(presence: String) {
+            "Android hai yo to"
+        }
+
+    }
+
     KoinApplication(configuration = koinConfiguration { modules(appModule) }) {
         MaterialTheme {
             val backstack = rememberAppBackStack()
@@ -59,6 +72,7 @@ actual fun App() {
 
             Scaffold(
                 snackbarHost = { SnackbarHost(snackBarHostState) },
+                bottomBar = { NetworkStatusBanner() },
                 modifier = Modifier.fillMaxSize()
             ) { innerPadding ->
                 innerPadding
@@ -79,3 +93,5 @@ actual fun App() {
         }
     }
 }
+
+

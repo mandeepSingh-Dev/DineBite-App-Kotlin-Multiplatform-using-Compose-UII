@@ -16,9 +16,11 @@ import com.example.kmpapp.dinebite.navigation.rememberAppBackStack
 import com.example.kmpapp.dinebite.ui.*
 import org.koin.compose.KoinApplication
 import org.koin.dsl.koinConfiguration
+import platform.PhotosUI.PHPickerViewController
 
 @Composable
 actual fun App() {
+
     KoinApplication(configuration = koinConfiguration { modules(appModule) }) {
         MaterialTheme {
             val backstack = rememberAppBackStack()

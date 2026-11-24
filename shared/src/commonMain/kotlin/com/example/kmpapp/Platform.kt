@@ -5,3 +5,10 @@ interface Platform {
 }
 
 expect fun getPlatform(): Platform
+
+
+
+interface PlatformInterface {
+
+    fun getResult(presence: String)
+}

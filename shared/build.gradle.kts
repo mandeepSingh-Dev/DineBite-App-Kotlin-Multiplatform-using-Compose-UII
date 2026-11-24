@@ -45,6 +45,9 @@ kotlin {
             implementation("androidx.datastore:datastore-preferences:1.1.7")
             implementation("androidx.navigation3:navigation3-ui:1.1.4")
             implementation("androidx.lifecycle:lifecycle-viewmodel-navigation3:2.11.0")
+            implementation("androidx.work:work-runtime-ktx:2.10.0")
+            implementation("androidx.security:security-crypto:1.1.0-alpha06")
+            implementation("androidx.biometric:biometric:1.1.0")
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -70,6 +73,7 @@ kotlin {
             implementation("io.coil-kt.coil3:coil-compose:3.1.0")
             implementation("io.coil-kt.coil3:coil-network-ktor3:3.1.0")
             implementation("androidx.datastore:datastore-preferences:1.1.7")
+            implementation("com.squareup.okio:okio:3.9.1")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

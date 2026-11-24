@@ -76,4 +76,7 @@ sealed interface DineBiteScreens : NavKey {
 
     @Serializable
     object ContactUs : DineBiteScreens
+
+    @Serializable
+    object LearningHub : DineBiteScreens
 }

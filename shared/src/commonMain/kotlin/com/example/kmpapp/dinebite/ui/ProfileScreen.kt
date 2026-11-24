@@ -119,6 +119,7 @@ fun DineBiteProfileScreen(backStack: NavBackStack<NavKey>) {
                 }
 
                 val options = listOf(
+                    Triple("🚀", "KMP Advanced Learning Hub", "Background tasks, Secure storage, Files & Biometrics") to DineBiteScreens.LearningHub,
                     Triple("👤", "My Profile", "View and edit your profile") to DineBiteScreens.EditProfile,
                     Triple("📍", "My Addresses", "Manage delivery addresses") to DineBiteScreens.MyAddresses,
                     Triple("⭐", "My Reviews", "Your food and restaurant reviews") to DineBiteScreens.MyReviews,

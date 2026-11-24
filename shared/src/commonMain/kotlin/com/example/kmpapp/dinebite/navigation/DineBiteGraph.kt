@@ -4,6 +4,7 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import com.example.kmpapp.dinebite.ui.*
+import com.example.kmpapp.learning.LearningHubScreen
 
 fun EntryProviderScope<NavKey>.dineBiteGraph(backStack: NavBackStack<NavKey>) {
     entry<DineBiteScreens.Splash> {
@@ -77,5 +78,8 @@ fun EntryProviderScope<NavKey>.dineBiteGraph(backStack: NavBackStack<NavKey>) {
     }
     entry<DineBiteScreens.ContactUs> {
         DineBiteContactUsScreen(backStack = backStack)
+    }
+    entry<DineBiteScreens.LearningHub> {
+        LearningHubScreen(backStack = backStack)
     }
 }
